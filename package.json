@@ -1,5 +1,5 @@
 {
-  "name": "my-turborepo",
+  "name": "EraserDraw",
   "private": true,
   "scripts": {
     "build": "turbo run build",
