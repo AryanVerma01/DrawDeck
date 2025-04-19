@@ -1,0 +1,39 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model File {
+  id        String   @id  @default(uuid())
+  name      String   @unique
+  teamId    String
+  createdAt DateTime @default(now())
+  Team      Team     @relation(fields: [teamId], references: [id])
+  Shape     Shape[]
+}
+
+model Shape {
+  id     String @id @default(uuid())
+  data   String
+  fileId String
+  File   File   @relation(fields: [fileId], references: [id])
+}
+
+model Team {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  userid    String
+  createdAt DateTime @default(now())
+  File      File[]
+}

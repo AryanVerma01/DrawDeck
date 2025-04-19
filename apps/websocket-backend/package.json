@@ -1,0 +1,25 @@
+{
+  "name": "websocket-backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "devDependencies": {
+    "@repo/typescript-config": "workspace:*",
+    "@types/ws": "^8.18.1",
+    "@repo/database": "*"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "start": "bun run dist/index.js",
+    "dev": "npx tsc -b && bun run dist/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "bufferutil": "^4.0.9",
+    "utf-8-validate": "^6.0.5",
+    "ws": "^8.18.1"
+  }
+}

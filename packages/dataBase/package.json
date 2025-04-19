@@ -1,0 +1,23 @@
+{
+  "name": "@repo/database",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "exports":{
+    "./dbclient":"./src/index.ts"
+  },
+  "scripts": {
+    "build":"bunx tsc -b"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "workspace:*",
+    "prisma": "6.6.0"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@prisma/client": "6.6.0"
+  }
+}
