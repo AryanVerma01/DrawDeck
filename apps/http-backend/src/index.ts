@@ -164,7 +164,7 @@ app.get("/write/teamId",async(req,res)=>{
     }
 })
 
-app.post('/shapes',(req,res)=>{
+app.post('/shapes',async (req,res)=>{
     try{
         const fileId = req.body.fileId
 
@@ -172,7 +172,7 @@ app.post('/shapes',(req,res)=>{
             res.json("fileId not recieved")
         }
     
-        const shapes = client.shape.findMany({
+        const shapes = await client.shape.findMany({
             where:{
                 fileId:fileId
             }

@@ -34,7 +34,7 @@ wss.on("connection",function connection(ws){
         }
 
         if(parsedData.inst === "shape"){
-            const roomId = parsedData.fileId
+            const roomId = parsedData.roomId
             const dimension = parsedData.dimension
 
             // when user creates a new shape in frontend then msg is send to webSocket Backend along with shape dimension
