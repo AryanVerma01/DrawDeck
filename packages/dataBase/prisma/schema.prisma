@@ -27,7 +27,7 @@ model Shape {
   id     String @id @default(uuid())
   data   String
   fileId String
-  File   File   @relation(fields: [fileId], references: [id])
+  File   File   @relation(fields: [fileId], references: [name])
 }
 
 model Team {

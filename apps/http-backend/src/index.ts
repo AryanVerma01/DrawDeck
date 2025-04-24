@@ -164,6 +164,31 @@ app.get("/write/teamId",async(req,res)=>{
     }
 })
 
+app.post('/shapes',(req,res)=>{
+    try{
+        const fileId = req.body.fileId
+
+        if(!fileId){
+            res.json("fileId not recieved")
+        }
+    
+        const shapes = client.shape.findMany({
+            where:{
+                fileId:fileId
+            }
+        })
+    
+        res.status(200).json({
+            shapes
+        })
+    }
+    catch(error:any){
+        res.status(500).json({
+            msg:"Unable to fetch shapes from backend"
+        })
+    }
+})
+
 app.listen(3001,()=>{
     console.log("HTTP Server running at port:3001")
 })
