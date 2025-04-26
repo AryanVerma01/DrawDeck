@@ -1,3 +1,4 @@
+"use client"
 import { 
   Pencil, 
   Share2, 
@@ -10,14 +11,36 @@ import {
 
 import {
   ClerkProvider,
+  RedirectToSignUp,
   SignInButton,
   SignUpButton,
   SignedIn,
   SignedOut,
   UserButton,
+  useAuth,
 } from '@clerk/nextjs'
+import { useEffect, useState } from 'react';
+import axios from 'axios';
 
 export default function Home(){
+
+  const { userId, isSignedIn } =  useAuth()
+  const [teams,setteams] = useState([])
+ 
+  if(!userId){
+    return <div><RedirectToSignUp/>sign To view this page</div>
+  }
+  
+
+  async function getteams(){
+    const res = await axios.post("http://localhost:3001/teams",{
+      userId:userId
+    })
+    setteams(res.data.teamNames)
+  }
+
+  setTimeout(() => { getteams() },1*1000)
+
   return (
     <div className="min-h-screen bg-black text-white">
       {/* Header */}
@@ -58,12 +81,12 @@ export default function Home(){
           QuickDraw is your go-to platform for creating professional diagrams, flowcharts, and wireframes. No design experience needed.
         </p>
         <div className="flex flex-col sm:flex-row justify-center gap-4">
-          <button className="bg-white text-black px-8 py-3 rounded-lg font-bold hover:bg-gray-200 transition-colors flex items-center justify-center">
-            Signup <ChevronRight className="ml-2 h-5 w-5" />
-          </button>
-          <button className="border-2 border-gray-700 text-white px-8 py-3 rounded-lg font-bold hover:border-white hover:text-white transition-colors">
-            SignIn
-          </button>
+          <a href={`${ teams.length === 0 ? `http://localhost:3000/dashboard/team` :`http://localhost:3000/dashboard/${teams[0]}`}`}>
+          <button className="bg-white text-black px-8 py-3 rounded-lg font-bold hover:bg-gray-200 transition-colors flex items-center justify-center" onClick={()=>{
+            getteams()
+          }}>
+            Dashboard <ChevronRight className="ml-2 h-5 w-5" />
+          </button></a>
         </div>
       </section>
 

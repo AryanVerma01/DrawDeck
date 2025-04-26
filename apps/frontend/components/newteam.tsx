@@ -28,13 +28,13 @@ export default function TeamForm(){
                     Enter your Team's Name
                 </div>
                 <Input type="text" placeholder="team's name" className="w-60 mx-15 my-8 text-center text-white font-bold" onChange={(e)=>{setteamname(e.target.value)}}></Input>
-                <Button className="bg-white text-black font-bold mx-33" onClick={async()=>{
+                <a href={`http://localhost:3000/dashboard/${teamname}`}><Button className="bg-white text-black font-bold mx-33" onClick={async()=>{
                     const response = await axios.post("http://localhost:3001/create/teams",{
                         name:teamname,
                         userId
                     })
                     console.log(response)
-                }}>Submit</Button>
+                }}>Submit</Button></a>
             </div>  
         </div>
     </div>

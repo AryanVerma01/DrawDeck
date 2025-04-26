@@ -11,7 +11,7 @@ import {
 import { Button } from "./ui/button"
 import axios from "axios"
 import { BACKEND_URL } from "@/config"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useAuth } from "@clerk/nextjs"
 
 
@@ -41,6 +41,8 @@ export function AppSidebar() {
     setteams(response.data.teamNames)
   }
 
+
+
     return (
       <Sidebar>
         <SidebarHeader className="bg-black text-white">
@@ -52,10 +54,10 @@ export function AppSidebar() {
         <SidebarContent className="bg-black text-white">
           <SidebarGroup>
           </SidebarGroup>
-            <a href="/dashboard/team"><Button className="bg-white text-black font-bold mx-3 hover:bg-slate-200 w-55">Create team</Button></a>
             <Button className="bg-white text-black font-bold mx-3 hover:bg-slate-200 w-55" onClick={()=>{
               getteams()
-            }}>Update Teams</Button>
+            }}>Fetch Teams</Button>
+            <a href="/dashboard/team"><Button className="bg-white text-black font-bold mx-3 hover:bg-slate-200 w-55">Create team</Button></a>
           <SidebarGroup />
         </SidebarContent>
         <SidebarFooter className="bg-black text-white"></SidebarFooter>

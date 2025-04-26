@@ -6,6 +6,7 @@ import axios from 'axios';
 import { BACKEND_URL } from '@/config';
 import { use } from "react"
 import Link from 'next/link';
+import { RedirectToSignIn, useAuth } from '@clerk/nextjs';
 
 // Define the file type based on the API response
 interface FileItem {
@@ -18,13 +19,15 @@ interface FileItem {
 export default function Dashboard({ params }: {
   params: { selectedVersion: string }
 }) {
-    //@ts-ignore
+
+  
+  //@ts-ignore
   const { selectedVersion } = use(params);
   const [filename, setFilename] = useState("");
   const [files, setFiles] = useState<FileItem[]>([]);
   const [teamId, setTeamId] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
-
+  
   // Fetch teamId and then files on component mount
   useEffect(() => {
     const fetchTeamIdAndFiles = async () => {
@@ -48,12 +51,25 @@ export default function Dashboard({ params }: {
         setIsLoading(false);
       }
     };
-
+    
     if (selectedVersion) {
       fetchTeamIdAndFiles();
     }
   }, [selectedVersion, BACKEND_URL]);
+  
+  const { isLoaded , isSignedIn , userId} = useAuth();
 
+  if(! isLoaded ){
+    return <div>Loading...</div>
+  }
+
+  if(! userId){
+    return <div>
+      <RedirectToSignIn/>
+      SignIn to view this page
+      </div>
+  }
+  
   const handleCreateFile = async () => {
     if (!filename.trim()) {
       alert("Please enter a filename");

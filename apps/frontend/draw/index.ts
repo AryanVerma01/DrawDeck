@@ -1,5 +1,6 @@
 // draw.ts - Refactored version
 "use client"
+import { useselecteTool } from "@/atom/selectedTool"
 import axios from "axios"
 import { useEffect, useState, useRef } from "react"
 
@@ -14,8 +15,15 @@ export type Shape = {
     centerX: number,
     centerY: number,
     radius: number
-}
-
+} | {
+    type:'line',
+    x1: number,
+    x2: number,  
+    y1: number,
+    y2:number,
+    lineThickness: number
+} 
+    
 // Helper functions that don't use hooks
 export function clearCanvas(existingShapes: Shape[], ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -31,6 +39,58 @@ export function clearCanvas(existingShapes: Shape[], ctx: CanvasRenderingContext
             ctx.beginPath();
             ctx.arc(shape.centerX, shape.centerY, shape.radius, 0, 2 * Math.PI);
             ctx.stroke();
+        }else if(shape.type === "line"){
+            var steep = (Math.abs(shape.y2 - shape.y1) > Math.abs(shape.x2 - shape.x1));
+            if (steep){
+                var x = shape.x1;
+                shape.x1 = shape.y1;
+                shape.y1 = x;
+    
+                var y = shape.y2;
+                shape.y2 = shape.x2;
+                shape.x2 = y;
+            }
+            if (shape.x1 > shape.x2) {
+                var x = shape.x1;
+                shape.x1 = shape.x2;
+                shape.x2 = x;
+    
+                var y = shape.y1;
+                shape.y1 = shape.y2;
+                shape.y2 = y;
+            }
+    
+            var dx = shape.x2 - shape.x1,
+                dy = Math.abs(shape.y2 - shape.y1),
+                error = 0,
+                de = dy / dx,
+                yStep = -1,
+                y = shape.y1;
+    
+            if (shape.y1 < shape.y2) {
+                yStep = 1;
+            }
+    
+            shape.lineThickness = 5 - Math.sqrt((shape.x2 - shape.x1) *(shape.x2-shape.x1) + (shape.y2 - shape.y1) * (shape.y2-shape.y1))/10;
+            if(shape.lineThickness < 1){
+                shape.lineThickness = 1;   
+            }
+    
+            for (var x = shape.x1; x < shape.x2; x++) {
+                if (steep) {
+                    ctx.fillStyle = "rgba(255,255,255)";
+                    ctx.fillRect(y, x, shape.lineThickness , shape.lineThickness );
+                } else {
+                    ctx.fillStyle = "rgba(255,255,255)";
+                    ctx.fillRect(x, y, shape.lineThickness , shape.lineThickness );
+                }
+    
+                error += de;
+                if (error >= 0.5) {
+                    y += yStep;
+                    error -= 1.0;
+                }
+            }
         }
     });
 }
@@ -71,7 +131,10 @@ export function useDrawing(fileId: string, fileName: string) {
     const [shapes, setShapes] = useState<Shape[]>([]);   // when useState changes component get re-rendered
     const [websocket, setWebsocket] = useState<WebSocket | null>(null);
     const fileid = fileId
-    
+    //@ts-ignore
+    const { selectedTool } =  useselecteTool()
+    console.log(selectedTool)
+
     // Initialize websocket
     useEffect(() => {
         const ws = new WebSocket("ws://localhost:8080");
@@ -133,6 +196,7 @@ export function useDrawing(fileId: string, fileName: string) {
         let clicked = false;
         let startX = 0;
         let startY = 0;
+        let lineThickness = 1;
         
         const handleMouseDown = (e: MouseEvent) => {
             clicked = true;
@@ -149,13 +213,36 @@ export function useDrawing(fileId: string, fileName: string) {
             const width = e.clientX - startX;
             const height = e.clientY - startY;
             
-            const shape: Shape = {
-                type: "rect",
-                x: startX,
-                y: startY,
-                width: width,
-                height: height
-            };
+            //@ts-ignore
+            let shape:Shape = null
+            if(selectedTool == 'rect'){
+                shape = {
+                    type: "rect",
+                    x: startX,
+                    y: startY,
+                    width: width,
+                    height: height
+                };
+            } else if(selectedTool == "circle"){
+                const radius = Math.max(width,height) / 2
+                shape = {
+                    type:'circle',
+                    radius:Math.max(width,height),
+                    centerX: startX + radius,
+                    centerY: startY + radius
+                }
+            }else if(selectedTool == "line"){
+                shape = {
+                    type:'line',
+                    x1: e.clientX,
+                    x2: startX,
+                    y1: e.clientY,
+                    y2: startY,
+                    lineThickness: lineThickness
+                }
+            }
+
+            if(!shape) return
             
             // Add shape locally
             setShapes(prevShapes => [...prevShapes, shape]);
@@ -180,10 +267,80 @@ export function useDrawing(fileId: string, fileName: string) {
             
             // Redraw canvas
             clearCanvas(shapes, ctx, canvas);
-            
             ctx.strokeStyle = "rgba(255,255,255)";
-            ctx.strokeRect(startX, startY, width, height);
-        };
+
+            if(selectedTool == "rect"){
+                ctx.strokeRect(startX, startY, width, height);
+            }
+            else if(selectedTool == "circle"){
+                const radius = Math.max(width,height) / 2
+                const centerX = startX + radius
+                const centerY = startY + radius
+                ctx.beginPath()
+                ctx.arc(centerX,centerY,radius,0,Math.PI * 2)
+                ctx.stroke()
+                ctx.closePath()
+            }
+            else if(selectedTool == "line"){
+                let x1 = e.clientX
+                let x2 = startX
+                let y1 = e.clientY
+                let y2 = startY
+
+                var steep = (Math.abs(y2 - y1) > Math.abs(x2 - x1));
+                if (steep){
+                    var x = x1;
+                    x1 = y1;
+                    y1 = x;
+        
+                    var y = y2;
+                    y2 = x2;
+                    x2 = y;
+                }
+                if (x1 > x2) {
+                    var x = x1;
+                    x1 = x2;
+                    x2 = x;
+        
+                    var y = y1;
+                    y1 = y2;
+                    y2 = y;
+                }
+        
+                var dx = x2 - x1,
+                    dy = Math.abs(y2 - y1),
+                    error = 0,
+                    de = dy / dx,
+                    yStep = -1,
+                    y = y1;
+        
+                if (y1 < y2) {
+                    yStep = 1;
+                }
+        
+                lineThickness = 5 - Math.sqrt((x2 - x1) *(x2-x1) + (y2 - y1) * (y2-y1))/10;
+                if(lineThickness < 1){
+                    lineThickness = 1;   
+                }
+        
+                for (var x = x1; x < x2; x++) {
+                    if (steep) {
+                        ctx.fillStyle = "rgba(255,255,255)";
+                        ctx.fillRect(y, x, lineThickness , lineThickness );
+                    } else {
+                        ctx.fillStyle = "rgba(255,255,255)";
+                        ctx.fillRect(x, y, lineThickness , lineThickness );
+                    }
+        
+                    error += de;
+                    if (error >= 0.5) {
+                        y += yStep;
+                        error -= 1.0;
+                    }
+                }
+            }
+            
+            };
         
         // Add event listeners
         canvas.addEventListener("mousedown", handleMouseDown);
