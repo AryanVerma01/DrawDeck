@@ -1,6 +1,5 @@
-// draw.ts - Refactored version
 "use client"
-import { useselecteTool } from "@/atom/selectedTool"
+import { useselecteTool } from "@/atom/selectedTool" 
 import axios from "axios"
 import { useEffect, useState, useRef } from "react"
 
@@ -22,9 +21,16 @@ export type Shape = {
     y1: number,
     y2:number,
     lineThickness: number
-} 
+} | {
+    type:'diamond',
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    startPoint: any,
+    endPoint: any
+}
     
-// Helper functions that don't use hooks
 export function clearCanvas(existingShapes: Shape[], ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = "rgba(0,0,0)";
@@ -38,6 +44,27 @@ export function clearCanvas(existingShapes: Shape[], ctx: CanvasRenderingContext
             ctx.strokeStyle = "rgba(255,255,255)";
             ctx.beginPath();
             ctx.arc(shape.centerX, shape.centerY, shape.radius, 0, 2 * Math.PI);
+            ctx.stroke();
+        }else if(shape.type === 'diamond'){
+            ctx.beginPath();
+            ctx.moveTo(shape.x,shape.y);
+
+            var half = shape.height - shape.y
+
+            var x1 = shape.x + half
+            var y1 = shape.y + half / 2
+
+            ctx.lineTo(x1, y1)
+            console.log(x1, y1);
+            ctx.moveTo(x1, y1)
+
+            ctx.lineTo(shape.width,
+                shape.height);
+
+            ctx.lineTo(shape.x - half, y1);
+            ctx.lineTo(shape.x,
+            shape.y);
+
             ctx.stroke();
         }else if(shape.type === "line"){
             var steep = (Math.abs(shape.y2 - shape.y1) > Math.abs(shape.x2 - shape.x1));
@@ -126,16 +153,14 @@ export async function getExistingShapes(fileId: string): Promise<Shape[]> {
     }
 }
 
-// Custom hook for canvas drawing functionality
 export function useDrawing(fileId: string, fileName: string) {
-    const [shapes, setShapes] = useState<Shape[]>([]);   // when useState changes component get re-rendered
+    const [shapes, setShapes] = useState<Shape[]>([]);   
     const [websocket, setWebsocket] = useState<WebSocket | null>(null);
     const fileid = fileId
     //@ts-ignore
-    const { selectedTool } =  useselecteTool()
+    const { selectedTool } = useselecteTool()
     console.log(selectedTool)
 
-    // Initialize websocket
     useEffect(() => {
         const ws = new WebSocket("ws://localhost:8080");
         
@@ -169,7 +194,6 @@ export function useDrawing(fileId: string, fileName: string) {
         };
     }, [fileName]);
     
-    // Load existing shapes
     useEffect(() => {
         const loadShapes = async () => {
             const existingShapes = await getExistingShapes(fileid);
@@ -179,30 +203,35 @@ export function useDrawing(fileId: string, fileName: string) {
         loadShapes();
     }, [fileId]);
     
-    // Setup canvas event handlers
+  
     const setupCanvas = (canvas: HTMLCanvasElement) => {
         if (!canvas) return;
         
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
         
-        // Initial canvas setup
         ctx.fillStyle = "rgba(0,0,0)";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         
-        // Draw existing shapes
         clearCanvas(shapes, ctx, canvas);
         
         let clicked = false;
         let startX = 0;
         let startY = 0;
         let lineThickness = 1;
+        let endPoint: {x: number ; y: number}[] = [];
+        let startPoint: { x: number;y: number; }[] = [];
         
         const handleMouseDown = (e: MouseEvent) => {
-            clicked = true;
             startX = e.clientX;
             startY = e.clientY;
+            clicked = true;
             
+            startPoint.push({
+                x:startX,
+                y:startY
+            })
+
             console.log(e.clientX, e.clientY);
         };
         
@@ -213,8 +242,7 @@ export function useDrawing(fileId: string, fileName: string) {
             const width = e.clientX - startX;
             const height = e.clientY - startY;
             
-            //@ts-ignore
-            let shape:Shape = null
+            let shape:Shape | null = null 
             if(selectedTool == 'rect'){
                 shape = {
                     type: "rect",
@@ -228,26 +256,48 @@ export function useDrawing(fileId: string, fileName: string) {
                 shape = {
                     type:'circle',
                     radius:Math.max(width,height),
-                    centerX: startX + radius,
-                    centerY: startY + radius
+                    centerX: startX + width/2,
+                    centerY: startY + height/2
                 }
             }else if(selectedTool == "line"){
                 shape = {
                     type:'line',
-                    x1: e.clientX,
-                    x2: startX,
-                    y1: e.clientY,
-                    y2: startY,
+                    x1: startX, 
+                    x2: e.clientX,
+                    y1: startY,
+                    y2: e.clientY,
                     lineThickness: lineThickness
+                }
+            }else if(selectedTool == "diamond"){
+                endPoint.push({
+                    x:e.clientX, 
+                    y:e.clientY
+                })
+
+                // shape = {
+                //     type:'diamond',
+                //     x: startX,
+                //     y: startY,
+                //     startPoint:startPoint,
+                //     endPoint:endPoint
+                // }
+
+                shape = {
+                    type:'diamond',
+                    x: startX,
+                    y: startY,
+                    width: e.clientX, 
+                    height: e.clientY,
+                    startPoint:startPoint,
+                    endPoint:endPoint
                 }
             }
 
             if(!shape) return
             
-            // Add shape locally
-            setShapes(prevShapes => [...prevShapes, shape]);
-            
-            // Send shape via websocket
+            setShapes(prevShapes => [...prevShapes, shape as Shape]);
+    
+            // Send shape dimension to webSockets server
             if (websocket && websocket.readyState === WebSocket.OPEN) {
                 websocket.send(JSON.stringify({
                     inst: "shape",
@@ -274,18 +324,43 @@ export function useDrawing(fileId: string, fileName: string) {
             }
             else if(selectedTool == "circle"){
                 const radius = Math.max(width,height) / 2
-                const centerX = startX + radius
-                const centerY = startY + radius
+                const centerX = startX + width/2
+                const centerY = startY + height/2
                 ctx.beginPath()
                 ctx.arc(centerX,centerY,radius,0,Math.PI * 2)
                 ctx.stroke()
                 ctx.closePath()
             }
+            else if(selectedTool == "diamond"){
+                endPoint[0] = { 
+                    x: e.clientX,
+                    y: e.clientY
+                };
+                
+                ctx.beginPath();
+                ctx.moveTo(startPoint[0].x,startPoint[0].y);
+
+                var half = e.clientY - startPoint[0].y 
+
+                var x1 = startPoint[0].x + half
+                var y1 = startPoint[0].y + half / 2
+
+                ctx.lineTo(x1, y1)
+                ctx.moveTo(x1, y1)
+
+                ctx.lineTo(e.clientX, e.clientY); 
+
+                ctx.lineTo(startPoint[0].x - half, y1);
+                ctx.lineTo(startPoint[0].x,
+                startPoint[0].y);
+
+                ctx.stroke();
+            }
             else if(selectedTool == "line"){
-                let x1 = e.clientX
-                let x2 = startX
-                let y1 = e.clientY
-                let y2 = startY
+                let x1 = startX 
+                let x2 = e.clientX
+                let y1 = startY
+                let y2 = e.clientY
 
                 var steep = (Math.abs(y2 - y1) > Math.abs(x2 - x1));
                 if (steep){
@@ -340,14 +415,12 @@ export function useDrawing(fileId: string, fileName: string) {
                 }
             }
             
-            };
+        };
         
-        // Add event listeners
         canvas.addEventListener("mousedown", handleMouseDown);
         canvas.addEventListener("mouseup", handleMouseUp);
         canvas.addEventListener("mousemove", handleMouseMove);
-        
-        // Return cleanup function
+
         return () => {
             canvas.removeEventListener("mousedown", handleMouseDown);
             canvas.removeEventListener("mouseup", handleMouseUp);

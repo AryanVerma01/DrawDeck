@@ -2,7 +2,7 @@
 import { useselecteTool } from "@/atom/selectedTool"
 import { useDrawing } from "@/draw"
 import { RedirectToSignIn, useAuth } from "@clerk/nextjs"
-import { ArrowRight, Circle, Diamond, LucideRectangleHorizontal } from "lucide-react"
+import { ArrowRight, Circle, Diamond, LucideRectangleHorizontal, Pencil } from "lucide-react"
 import { use, useEffect, useRef , useState } from "react";
 
 export default function FilePage({params}:{
@@ -62,7 +62,7 @@ export default function FilePage({params}:{
                 }}><Diamond className={`${ selectedTool == "diamond" ? `text-red-500` : `text-white`}`}/></button>
                 <button onClick={()=>{
                     setSelectedTool("line")
-                }}><ArrowRight className={`${ selectedTool == "line" ? `text-red-500` : `text-white`}`}/></button>
+                }}><Pencil className={`${ selectedTool == "line" ? `text-red-500` : `text-white`}`}/></button>
             </div>
         </div>
     );

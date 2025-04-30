@@ -19,11 +19,13 @@ import { useAuth } from "@clerk/nextjs"
 export function AppSidebar() {
   
   const { isLoaded, isSignedIn, userId, sessionId, getToken } = useAuth();
+  const [loading,setloading] = useState<boolean>(true)
   const [team,setteams] = useState([]);
   const data = {
     team
   }
 
+  
     if (!isLoaded) {
       return <div>Loading...</div>
     }
@@ -41,8 +43,10 @@ export function AppSidebar() {
     setteams(response.data.teamNames)
   }
 
-
-
+  if(loading == true){
+    return <div>Loading</div>
+  }
+  else if(loading == false){
     return (
       <Sidebar>
         <SidebarHeader className="bg-black text-white">
@@ -54,6 +58,9 @@ export function AppSidebar() {
         <SidebarContent className="bg-black text-white">
           <SidebarGroup>
           </SidebarGroup>
+          <div>
+            {team}
+          </div>
             <Button className="bg-white text-black font-bold mx-3 hover:bg-slate-200 w-55" onClick={()=>{
               getteams()
             }}>Fetch Teams</Button>
@@ -63,5 +70,6 @@ export function AppSidebar() {
         <SidebarFooter className="bg-black text-white"></SidebarFooter>
       </Sidebar>
     )
+  }
   }
   
