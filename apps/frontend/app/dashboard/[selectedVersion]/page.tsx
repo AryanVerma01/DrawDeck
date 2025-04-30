@@ -8,6 +8,13 @@ import { use } from "react"
 import Link from 'next/link';
 import { RedirectToSignIn, useAuth } from '@clerk/nextjs';
 
+type PageProps = {
+  params: {
+    selectedVersion: string;
+  };
+  searchParams?: Record<string, string | string[]>;
+}
+
 // Define the file type based on the API response
 interface FileItem {
   id: string;
@@ -16,10 +23,7 @@ interface FileItem {
   createdAt: string;
 }
 
-export default function Dashboard({ params }: {
-  params: { selectedVersion: string }
-}) {
-
+export default function Dashboard({ params }: PageProps) {
   
   //@ts-ignore
   const { selectedVersion } = use(params);
