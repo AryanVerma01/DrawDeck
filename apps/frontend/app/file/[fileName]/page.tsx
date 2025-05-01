@@ -1,5 +1,6 @@
 "use client"
 import { useselecteTool } from "@/atom/selectedTool"
+import { TextShimmerWave } from "@/components/motion-primitives/text-shimmer-wave"
 import { useDrawing } from "@/draw"
 import { RedirectToSignIn, useAuth } from "@clerk/nextjs"
 import { ArrowRight, Circle, Diamond, LucideRectangleHorizontal, Pencil } from "lucide-react"
@@ -33,12 +34,32 @@ export default function FilePage({params}:{
     const {isLoaded , isSignedIn , userId} = useAuth();
 
     if(!isLoaded){
-        return <div>Loading ...</div>
+        return <div className='flex justify-center h-screen bg-black '><div className='my-auto'><TextShimmerWave
+            className='[--base-color:#FAF6E9] [--base-gradient-color:#FDFAF6] text-2xl'
+            duration={1}
+            spread={1}
+            zDistance={1}
+            scaleDistance={1.1}
+            rotateYDistance={20}
+          >
+            Loading...
+          </TextShimmerWave></div>
+          </div>
     }
     
     if(!isSignedIn){
         return <div>
-            Please Signin to access the File
+            <div className='flex justify-center h-screen w-365 bg-black '><div className='my-auto'><TextShimmerWave
+                className='[--base-color:#FAF6E9] [--base-gradient-color:#FDFAF6] text-2xl'
+                duration={1}
+                spread={1}
+                zDistance={1}
+                scaleDistance={1.1}
+                rotateYDistance={20}
+              >
+                 Please Signin to access the File
+              </TextShimmerWave></div>
+              </div>
             <RedirectToSignIn/>
         </div>
     }

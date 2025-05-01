@@ -34,7 +34,7 @@ export function VersionSwitcher({
                 <User className="size-4" />
               </div>
               <div className="flex flex-col gap-0.5 leading-none">
-                <span className="font-semibold">{selectedVersion}</span>
+                <span className="font-semibold">Select Team</span>
                 <span className="">{selectedVersion}</span>
               </div>
               <ChevronsUpDown className="ml-auto" />

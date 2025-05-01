@@ -46,9 +46,10 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.3.0",
-    "lucide-react": "^0.487.0",
+    "lucide-react": "^0.503.0",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "@repo/eslint-config": "*"
   },
   "overrides": {
     "react-is": "^19.0.0-rc-69d4b800-20241021"
